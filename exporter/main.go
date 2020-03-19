@@ -33,9 +33,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	xmpp "github.com/FluuxIO/go-xmpp"
 	uuid "github.com/satori/go.uuid"
-	stanza "gosrc.io/xmpp/stanza"
+	"gosrc.io/xmpp"
+	"gosrc.io/xmpp/stanza"
 )
 
 type iSig int
@@ -147,12 +147,14 @@ func main() {
 	jid := xmppUser + "@" + xmppAuthDomain
 	address := xmppServer + ":" + xmppPort
 	config := xmpp.Config{
-		Address:      address,
+		TransportConfiguration: xmpp.TransportConfiguration{
+			Address:        address,
+			TLSConfig:		&tls.Config{InsecureSkipVerify: true},
+		},
 		Jid:          jid,
-		Password:     xmppPw,
+		Credential:   xmpp.Password(xmppPw),
 		StreamLogger: os.Stdout,
 		Insecure:     true,
-		TLSConfig:    &tls.Config{InsecureSkipVerify: true},
 	}
 
 	router := xmpp.NewRouter()
@@ -242,8 +244,8 @@ func postConnect(s xmpp.Sender) {
 		signals <- iFail
 	}
 
-	uuid, _ := uuid.NewV4()
-	id := uuid.String()
+	uuid4 := uuid.NewV4()
+	id := uuid4.String()
 
 	//join jvbbrewery room
 	presence := stanza.NewPresence(stanza.Attrs{
@@ -261,7 +263,7 @@ func postConnect(s xmpp.Sender) {
 }
 
 func connectClient(c xmpp.Config, r *xmpp.Router) {
-	client, err := xmpp.NewClient(c, r)
+	client, err := xmpp.NewClient(&c, r, errorHandler)
 	if err != nil {
 		fmt.Printf("unable to create client: %s\n", err.Error())
 		signals <- iFail
@@ -281,4 +283,8 @@ func connectClient(c xmpp.Config, r *xmpp.Router) {
 	fmt.Println("XMPP connection closed, exiting.")
 	signals <- iExit
 	return
+}
+
+func errorHandler(err error) {
+	fmt.Printf(err.Error())
 }
