@@ -8,17 +8,11 @@ steps:
     commands:
       - cd exporter
       - go build
-
----
-kind: pipeline
-name: release
-
-steps:
   - name: publish
     image: plugins/github-release
     settings:
       api_key:
         from_secret: github_apikey
-      files: dist/*
+      files: exporter/exporter
     when:
       event: tag
