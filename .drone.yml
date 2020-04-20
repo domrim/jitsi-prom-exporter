@@ -2,17 +2,24 @@
 kind: pipeline
 name: default
 
+platform:
+  arch: amd64
+
 steps:
   - name: build
     image: golang
     commands:
       - cd exporter
-      - go build
+      - go build -o exporter-amd64
   - name: publish
     image: plugins/github-release
     settings:
       api_key:
         from_secret: github_apikey
-      files: exporter/exporter
+      files: exporter/exporter-amd64
+      checksum:
+        - sha1
+        - sha256
+        - sha512
     when:
       event: tag
