@@ -23,3 +23,8 @@ steps:
         - sha512
     when:
       event: tag
+---
+kind: signature
+hmac: 58721fa21fd6a9eaf4d46ca310c7f20a79011f31d50c6457e29567526b103238
+
+...
